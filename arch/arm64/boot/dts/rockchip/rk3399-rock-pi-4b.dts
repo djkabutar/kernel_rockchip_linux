@@ -19,7 +19,7 @@
 &sdio0 {
 	status = "okay";
 
-	brcmf: wifi@1 {
+	wifi@1 {
 		compatible = "brcm,bcm4329-fmac";
 		reg = <1>;
 		interrupt-parent = <&gpio0>;
@@ -34,7 +34,7 @@
 	status = "okay";
 
 	bluetooth {
-		compatible = "brcm,bcm4345c5";
+		compatible = "realtek,rtl8822cs-bt";
 		clocks = <&rk808 1>;
 		clock-names = "lpo";
 		device-wakeup-gpios = <&gpio2 RK_PD3 GPIO_ACTIVE_HIGH>;
