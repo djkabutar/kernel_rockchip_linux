@@ -1029,7 +1029,7 @@ void GetHalODMVar(
 }
 
 #ifdef RTW_HALMAC
-#include "../hal_halmac.h"
+#include "../hal/hal_halmac.h"
 #endif
 
 enum hal_status
