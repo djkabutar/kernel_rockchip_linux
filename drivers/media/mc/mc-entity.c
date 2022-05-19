@@ -402,8 +402,10 @@ __must_check int __media_pipeline_start(struct media_entity *entity,
 	}
 
 	ret = media_graph_walk_init(&pipe->graph, mdev);
-	if (ret)
+	if (ret) {
+		pr_err("failed to initialize graph walk\n");
 		return ret;
+	}
 
 	media_graph_walk_start(&pipe->graph, entity);
 
