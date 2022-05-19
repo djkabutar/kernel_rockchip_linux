@@ -516,6 +516,7 @@ __must_check int media_pipeline_start(struct media_entity *entity,
 	struct media_device *mdev = entity->graph_obj.mdev;
 	int ret;
 
+	printk(KERN_DEBUG "media: pipeline start for %s\n", entity->name);
 	mutex_lock(&mdev->graph_mutex);
 	ret = __media_pipeline_start(entity, pipe);
 	mutex_unlock(&mdev->graph_mutex);

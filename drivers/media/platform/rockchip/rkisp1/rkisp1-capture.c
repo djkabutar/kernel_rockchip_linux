@@ -1025,7 +1025,7 @@ rkisp1_vb2_start_streaming(struct vb2_queue *queue, unsigned int count)
 
 	ret = media_pipeline_start(entity, &cap->rkisp1->pipe);
 	if (ret) {
-		dev_err(cap->rkisp1->dev, "start pipeline failed %d\n", ret);
+		dev_err(cap->rkisp1->dev, "Hey there, start pipeline failed %d\n", ret);
 		goto err_ret_buffers;
 	}
 
@@ -1045,8 +1045,10 @@ rkisp1_vb2_start_streaming(struct vb2_queue *queue, unsigned int count)
 	}
 
 	ret = rkisp1_pipeline_stream_enable(cap);
-	if (ret)
+	if (ret) {
+		dev_err(cap->rkisp1->dev, "stream pipeline enabling failed %d\n", ret);
 		goto err_v4l2_pm_put;
+	}
 
 	mutex_unlock(&cap->rkisp1->stream_lock);
 
