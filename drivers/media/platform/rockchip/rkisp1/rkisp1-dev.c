@@ -22,6 +22,7 @@
 
 #include "rkisp1-common.h"
 
+#define DEBUG
 /*
  * ISP Details
  * -----------
@@ -236,7 +237,7 @@ static int rkisp1_subdev_notifier_complete(struct v4l2_async_notifier *notifier)
 	if (ret)
 		return ret;
 
-	dev_dbg(rkisp1->dev, "Async subdev notifier completed\n");
+	printk(KERN_DEBUG "Async subdev notifier completed\n");
 
 	return 0;
 }
@@ -269,14 +270,19 @@ static int rkisp1_subdev_notifier(struct rkisp1_device *rkisp1)
 			break;
 
 		ret = v4l2_fwnode_endpoint_parse(ep, &vep);
-		if (ret)
+		if (ret) {
+			printk(KERN_DEBUG "Couldn't parse endpoint %d\n",
+			       next_id);
+				   
 			goto err_parse;
+		}
 
 		rk_asd = v4l2_async_nf_add_fwnode_remote(ntf, ep,
-							 struct
+							 struct	
 							 rkisp1_sensor_async);
 		if (IS_ERR(rk_asd)) {
 			ret = PTR_ERR(rk_asd);
+			printk(KERN_ERR "Couldn't add sensor %d\n", next_id);
 			goto err_parse;
 		}
 
@@ -284,7 +290,7 @@ static int rkisp1_subdev_notifier(struct rkisp1_device *rkisp1)
 		rk_asd->mbus_flags = vep.bus.mipi_csi2.flags;
 		rk_asd->lanes = vep.bus.mipi_csi2.num_data_lanes;
 
-		dev_dbg(rkisp1->dev, "registered ep id %d with %d lanes\n",
+		printk(KERN_DEBUG "registered ep id %d with %d lanes\n",
 			vep.base.id, rk_asd->lanes);
 
 		next_id = vep.base.id + 1;
@@ -299,7 +305,7 @@ err_parse:
 	}
 
 	if (next_id == 0)
-		dev_dbg(rkisp1->dev, "no remote subdevice found\n");
+		printk(KERN_DEBUG "no remote subdevice found\n");
 	ntf->ops = &rkisp1_subdev_notifier_ops;
 	ret = v4l2_async_nf_register(&rkisp1->v4l2_dev, ntf);
 	if (ret) {

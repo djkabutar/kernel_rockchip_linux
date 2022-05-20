@@ -14,6 +14,8 @@
 #include <media/media-entity.h>
 #include <media/media-device.h>
 
+#define DEBUG
+
 static inline const char *intf_type(struct media_interface *intf)
 {
 	switch (intf->type) {
@@ -78,7 +80,7 @@ static void dev_dbg_obj(const char *event_name,  struct media_gobj *gobj)
 #if defined(DEBUG) || defined (CONFIG_DYNAMIC_DEBUG)
 	switch (media_type(gobj)) {
 	case MEDIA_GRAPH_ENTITY:
-		dev_dbg(gobj->mdev->dev,
+		printk(KERN_DEBUG
 			"%s id %u: entity '%s'\n",
 			event_name, media_id(gobj),
 			gobj_to_entity(gobj)->name);
@@ -87,7 +89,7 @@ static void dev_dbg_obj(const char *event_name,  struct media_gobj *gobj)
 	{
 		struct media_link *link = gobj_to_link(gobj);
 
-		dev_dbg(gobj->mdev->dev,
+		printk(KERN_DEBUG
 			"%s id %u: %s link id %u ==> id %u\n",
 			event_name, media_id(gobj),
 			media_type(link->gobj0) == MEDIA_GRAPH_PAD ?
@@ -100,7 +102,7 @@ static void dev_dbg_obj(const char *event_name,  struct media_gobj *gobj)
 	{
 		struct media_pad *pad = gobj_to_pad(gobj);
 
-		dev_dbg(gobj->mdev->dev,
+		printk(KERN_DEBUG
 			"%s id %u: %s%spad '%s':%d\n",
 			event_name, media_id(gobj),
 			pad->flags & MEDIA_PAD_FL_SINK   ? "sink " : "",
@@ -113,7 +115,7 @@ static void dev_dbg_obj(const char *event_name,  struct media_gobj *gobj)
 		struct media_interface *intf = gobj_to_intf(gobj);
 		struct media_intf_devnode *devnode = intf_to_devnode(intf);
 
-		dev_dbg(gobj->mdev->dev,
+		printk(KERN_DEBUG
 			"%s id %u: intf_devnode %s - major: %d, minor: %d\n",
 			event_name, media_id(gobj),
 			intf_type(intf),
@@ -282,7 +284,7 @@ void media_graph_walk_start(struct media_graph *graph,
 	graph->top = 0;
 	graph->stack[graph->top].entity = NULL;
 	stack_push(graph, entity);
-	dev_dbg(entity->graph_obj.mdev->dev,
+	printk(KERN_DEBUG
 		"begin graph walk at '%s'\n", entity->name);
 }
 EXPORT_SYMBOL_GPL(media_graph_walk_start);
@@ -298,7 +300,7 @@ static void media_graph_walk_iter(struct media_graph *graph)
 	/* The link is not enabled so we do not follow. */
 	if (!(link->flags & MEDIA_LNK_FL_ENABLED)) {
 		link_top(graph) = link_top(graph)->next;
-		dev_dbg(entity->graph_obj.mdev->dev,
+		printk(KERN_DEBUG
 			"walk: skipping disabled link '%s':%u -> '%s':%u\n",
 			link->source->entity->name, link->source->index,
 			link->sink->entity->name, link->sink->index);
@@ -311,7 +313,7 @@ static void media_graph_walk_iter(struct media_graph *graph)
 	/* Has the entity already been visited? */
 	if (media_entity_enum_test_and_set(&graph->ent_enum, next)) {
 		link_top(graph) = link_top(graph)->next;
-		dev_dbg(entity->graph_obj.mdev->dev,
+		printk(KERN_DEBUG
 			"walk: skipping entity '%s' (already seen)\n",
 			next->name);
 		return;
@@ -320,7 +322,7 @@ static void media_graph_walk_iter(struct media_graph *graph)
 	/* Push the new entity to stack and start over. */
 	link_top(graph) = link_top(graph)->next;
 	stack_push(graph, next);
-	dev_dbg(entity->graph_obj.mdev->dev, "walk: pushing '%s' on stack\n",
+	printk(KERN_DEBUG "walk: pushing '%s' on stack\n",
 		next->name);
 	lockdep_assert_held(&entity->graph_obj.mdev->graph_mutex);
 }
@@ -341,7 +343,7 @@ struct media_entity *media_graph_walk_next(struct media_graph *graph)
 		media_graph_walk_iter(graph);
 
 	entity = stack_pop(graph);
-	dev_dbg(entity->graph_obj.mdev->dev,
+	printk(KERN_DEBUG
 		"walk: returning entity '%s'\n", entity->name);
 
 	return entity;
@@ -459,7 +461,7 @@ __must_check int __media_pipeline_start(struct media_entity *entity,
 
 			ret = entity->ops->link_validate(link);
 			if (ret < 0 && ret != -ENOIOCTLCMD) {
-				dev_dbg(entity->graph_obj.mdev->dev,
+				printk(KERN_DEBUG
 					"link validation failed for '%s':%u -> '%s':%u, error %d\n",
 					link->source->entity->name,
 					link->source->index,
@@ -473,7 +475,7 @@ __must_check int __media_pipeline_start(struct media_entity *entity,
 
 		if (!bitmap_full(active, entity->num_pads)) {
 			ret = -ENOLINK;
-			dev_dbg(entity->graph_obj.mdev->dev,
+			printk(KERN_DEBUG
 				"'%s':%u must be connected by an enabled link\n",
 				entity->name,
 				(unsigned)find_first_zero_bit(
@@ -519,6 +521,14 @@ __must_check int media_pipeline_start(struct media_entity *entity,
 	printk(KERN_DEBUG "media: pipeline start for %s\n", entity->name);
 	mutex_lock(&mdev->graph_mutex);
 	ret = __media_pipeline_start(entity, pipe);
+
+	if (ret == 0)
+		printk(KERN_DEBUG "media: pipeline started for %s\n",
+		       entity->name);
+	else
+		printk(KERN_DEBUG "media: pipeline start failed for %s\n",
+		       entity->name);
+
 	mutex_unlock(&mdev->graph_mutex);
 	return ret;
 }
