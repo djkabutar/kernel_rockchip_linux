@@ -1022,8 +1022,10 @@ static int rkisp1_pipeline_stream_enable(struct rkisp1_capture *cap)
 
 	ret = v4l2_subdev_call(&rkisp1->resizer_devs[cap->id].sd, video,
 						   s_stream, true);
-	if (ret)
+	if (ret) {
+		printk(KERN_DEBUG "Failed to enable resizer\n");
 		goto err_disable_cap;
+	}
 
 	/*
 	 * If the other capture is streaming, isp and sensor nodes are already
@@ -1033,13 +1035,17 @@ static int rkisp1_pipeline_stream_enable(struct rkisp1_capture *cap)
 		return 0;
 
 	ret = v4l2_subdev_call(&rkisp1->isp.sd, video, s_stream, true);
-	if (ret)
+	if (ret) {
+		printk(KERN_DEBUG "Failed to enable isp\n");
 		goto err_disable_rsz;
+	}
 
 	ret = v4l2_subdev_call(rkisp1->active_sensor->sd, video, s_stream,
 						   true);
-	if (ret)
+	if (ret) {
+		printk(KERN_DEBUG "Failed to enable sensor\n");
 		goto err_disable_isp;
+	}
 
 	return 0;
 
@@ -1376,7 +1382,7 @@ static int rkisp1_capture_link_validate(struct media_link *link)
 	ret = v4l2_subdev_call(sd, pad, get_fmt, NULL, &sd_fmt);
 	if (ret)
 	{
-		printk(KERN_DEBUG
+		pr_info(
 			   "%s: failed to get format from subdev %s\n",
 			   __func__, sd->name);
 		return ret;
@@ -1386,11 +1392,14 @@ static int rkisp1_capture_link_validate(struct media_link *link)
 		sd_fmt.format.width != cap->pix.fmt.width ||
 		sd_fmt.format.code != fmt->mbus)
 	{
-		printk(KERN_DEBUG "%s: invalid format from subdev %s\n",
+		pr_info("%s: invalid format from subdev %s\n",
 			   __func__, sd->name);
 
 		return -EPIPE;
 	}
+
+	pr_info("%s: valid format from subdev %s\n, link validated",
+		   __func__, sd->name);
 
 	return 0;
 }
@@ -1477,7 +1486,7 @@ static int rkisp1_register_capture(struct rkisp1_capture *cap)
 	ret = video_register_device(vdev, VFL_TYPE_VIDEO, -1);
 	if (ret)
 	{
-		dev_err(cap->rkisp1->dev,
+		printk(KERN_DEBUG
 				"failed to register %s, ret=%d\n", vdev->name, ret);
 		return ret;
 	}
@@ -1487,6 +1496,7 @@ static int rkisp1_register_capture(struct rkisp1_capture *cap)
 	ret = media_entity_pads_init(&vdev->entity, 1, &node->pad);
 	if (ret)
 	{
+		printk(KERN_DEBUG "failed to init media entity\n");
 		video_unregister_device(vdev);
 		return ret;
 	}

@@ -517,15 +517,15 @@
 &i2c4 {
 	status = "okay";
 	clock-frequency = <400000>;
-
-	imx219: sensor@10 {
+	camera0: camera-module@10 {
 		status = "okay";
 		compatible = "sony,imx219";
 		reg = <0x10>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&cam_en>;
+
 		clocks = <&imx219_clk>;
 		clock-names = "xclk";
+		pinctrl-names = "default";
+		pinctrl-0 = <&cam_en>;
 		xclr-gpios = <&gpio1 RK_PB5 GPIO_ACTIVE_HIGH>;
 		VANA-supply = <&cam_v_ana>;
 		VDIG-supply = <&cam_v_dig>;
@@ -538,11 +538,12 @@
 		};
 
 		port {
-			csi1_out_1: endpoint {
-				remote-endpoint = <&csi1_ep1>;
-				clock-lanes = <0>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			ucam_out0: endpoint@1 {
+				reg = <1>;
+				remote-endpoint = <&mipi_in_ucam0>;
 				data-lanes = <1 2>;
-				clock-noncontinuous;
 				link-frequencies = /bits/ 64 <456000000>;
 			};
 		};
@@ -877,23 +878,51 @@
 	status = "okay";
 };
 
-&i2c4 {
-};
+
 
 &mipi_dphy_rx0 {
 	status = "okay";
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			reg = <0>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			mipi_in_ucam0: endpoint@1 {
+				reg = <1>;
+				remote-endpoint = <&ucam_out0>;
+				data-lanes = <1 2>;
+			};
+		};
+
+		port@1 {
+			reg = <1>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			dphy_rx0_out: endpoint@0 {
+				reg = <0>;
+				remote-endpoint = <&isp0_mipi_in>;
+			};
+		};
+
+	};
 };
 
 &isp0 {
 	status = "okay";
 
-	ports {
-		port@0 {
-			csi1_ep1: endpoint@1 {
-				reg = <1>;
-				remote-endpoint = <&csi1_out_1>;
-				data-lanes = <1 2>;
-			};
+	port {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		isp0_mipi_in: endpoint@0 {
+			reg = <0>;
+			remote-endpoint = <&dphy_rx0_out>;
 		};
 	};
 };

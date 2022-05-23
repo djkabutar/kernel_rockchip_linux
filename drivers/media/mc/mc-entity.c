@@ -204,6 +204,7 @@ int media_entity_pads_init(struct media_entity *entity, u16 num_pads,
 	if (mdev)
 		mutex_unlock(&mdev->graph_mutex);
 
+	// Return 0 thay che print thay
 	return 0;
 }
 EXPORT_SYMBOL_GPL(media_entity_pads_init);
@@ -894,7 +895,7 @@ EXPORT_SYMBOL_GPL(media_entity_find_link);
 struct media_pad *media_entity_remote_pad(const struct media_pad *pad)
 {
 	struct media_link *link;
-
+	// Log 
 	list_for_each_entry(link, &pad->entity->links, list) {
 		if (!(link->flags & MEDIA_LNK_FL_ENABLED))
 			continue;
@@ -905,6 +906,9 @@ struct media_pad *media_entity_remote_pad(const struct media_pad *pad)
 		if (link->sink == pad)
 			return link->source;
 	}
+
+	printk(KERN_DEBUG "No remote pad for pad %s:%u\n",
+	       pad->entity->name, pad->index);
 
 	return NULL;
 

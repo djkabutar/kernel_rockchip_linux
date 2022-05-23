@@ -199,10 +199,15 @@ static struct v4l2_subdev *rkisp1_get_remote_sensor(struct v4l2_subdev *sd)
 
 	local = &sd->entity.pads[RKISP1_ISP_PAD_SINK_VIDEO];
 	remote = media_entity_remote_pad(local);
-	if (!remote)
+	if (!remote) {
+		printk(KERN_DEBUG "rkisp1: no remote pad\n");
 		return NULL;
+	}
 
 	sensor_me = remote->entity;
+
+	printk(KERN_DEBUG "rkisp1: remote pad entity name: %s\n",
+	       sensor_me->name);
 	return media_entity_to_v4l2_subdev(sensor_me);
 }
 
@@ -437,7 +442,7 @@ static int rkisp1_config_mipi(struct rkisp1_device *rkisp1)
 		     RKISP1_CIF_MIPI_ADD_DATA_OVFLW,
 		     RKISP1_CIF_MIPI_IMSC);
 
-	dev_dbg(rkisp1->dev, "\n  MIPI_CTRL 0x%08x\n"
+	pr_info("\n  MIPI_CTRL 0x%08x\n"
 		"  MIPI_IMG_DATA_SEL 0x%08x\n"
 		"  MIPI_STATUS 0x%08x\n"
 		"  MIPI_IMSC 0x%08x\n",
@@ -477,7 +482,7 @@ static int rkisp1_config_cif(struct rkisp1_device *rkisp1)
 	int ret;
 
 	cif_id = rkisp1_read(rkisp1, RKISP1_CIF_VI_ID);
-	dev_dbg(rkisp1->dev, "CIF_ID 0x%08x\n", cif_id);
+	pr_info("CIF_ID 0x%08x\n", cif_id);
 
 	ret = rkisp1_config_isp(rkisp1);
 	if (ret)
@@ -915,7 +920,7 @@ static int rkisp1_isp_set_selection(struct v4l2_subdev *sd,
 	if (sel->target != V4L2_SEL_TGT_CROP)
 		return -EINVAL;
 
-	dev_dbg(rkisp1->dev, "%s: pad: %d sel(%d,%d)/%dx%d\n", __func__,
+	pr_info("%s: pad: %d sel(%d,%d)/%dx%d\n", __func__,
 		sel->pad, sel->r.left, sel->r.top, sel->r.width, sel->r.height);
 	mutex_lock(&isp->ops_lock);
 	if (sel->pad == RKISP1_ISP_PAD_SINK_VIDEO)
@@ -962,13 +967,13 @@ static int rkisp1_mipi_csi2_start(struct rkisp1_isp *isp,
 	s64 pixel_clock;
 
 	if (!sensor->pixel_rate_ctrl) {
-		dev_warn(rkisp1->dev, "No pixel rate control in sensor subdev\n");
+		pr_info("No pixel rate control in sensor subdev\n");
 		return -EPIPE;
 	}
 
 	pixel_clock = v4l2_ctrl_g_ctrl_int64(sensor->pixel_rate_ctrl);
 	if (!pixel_clock) {
-		dev_err(rkisp1->dev, "Invalid pixel rate value\n");
+		printk(KERN_ERR "Invalid pixel rate value\n");
 		return -EINVAL;
 	}
 
@@ -1088,9 +1093,16 @@ int rkisp1_isp_register(struct rkisp1_device *rkisp1)
 	isp->src_fmt = rkisp1_isp_mbus_info_get(RKISP1_DEF_SRC_PAD_FMT);
 
 	mutex_init(&isp->ops_lock);
+	// Sd->Etntity 
+	// Sd->Address
+
 	ret = media_entity_pads_init(&sd->entity, RKISP1_ISP_PAD_MAX, pads);
-	if (ret)
+	if (ret) {
+		printk(KERN_DEBUG "Failed to init media entity\n");
 		return ret;
+	}
+
+	printk(KERN_DEBUG "rkisp1_isp_register: SD address: %p | %p\n", sd, &sd->entity);
 
 	ret = v4l2_device_register_subdev(&rkisp1->v4l2_dev, sd);
 	if (ret) {

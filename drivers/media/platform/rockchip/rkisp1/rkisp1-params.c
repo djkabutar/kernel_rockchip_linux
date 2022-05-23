@@ -1844,8 +1844,10 @@ int rkisp1_params_register(struct rkisp1_device *rkisp1)
 
 	node->pad.flags = MEDIA_PAD_FL_SOURCE;
 	ret = media_entity_pads_init(&vdev->entity, 1, &node->pad);
-	if (ret)
+	if (ret) {
+		printk(KERN_DEBUG "Failed to initialize media entity\n");
 		return ret;
+	}
 	ret = video_register_device(vdev, VFL_TYPE_VIDEO, -1);
 	if (ret) {
 		dev_err(rkisp1->dev,

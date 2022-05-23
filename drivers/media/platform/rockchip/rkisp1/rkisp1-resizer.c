@@ -820,8 +820,10 @@ static int rkisp1_rsz_register(struct rkisp1_resizer *rsz)
 
 	mutex_init(&rsz->ops_lock);
 	ret = media_entity_pads_init(&sd->entity, RKISP1_RSZ_PAD_MAX, pads);
-	if (ret)
+	if (ret) {
+		printk(KERN_DEBUG "Failed to init media entity\n");
 		return ret;
+	}
 
 	ret = v4l2_device_register_subdev(&rsz->rkisp1->v4l2_dev, sd);
 	if (ret) {

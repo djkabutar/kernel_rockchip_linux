@@ -462,8 +462,10 @@ int rkisp1_stats_register(struct rkisp1_device *rkisp1)
 
 	node->pad.flags = MEDIA_PAD_FL_SINK;
 	ret = media_entity_pads_init(&vdev->entity, 1, &node->pad);
-	if (ret)
+	if (ret) {
+		printk(KERN_DEBUG "Failed to init media entity\n");
 		goto err_mutex_destroy;
+	}
 
 	ret = video_register_device(vdev, VFL_TYPE_VIDEO, -1);
 	if (ret) {

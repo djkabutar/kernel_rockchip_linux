@@ -585,7 +585,12 @@ camera: &i2c7 {
 	status = "okay";
 
 	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
 		port@0 {
+			#address-cells = <1>;
+			#size-cells = <0>;
 			mipi_in_wcam: endpoint@0 {
 				reg = <0>;
 				remote-endpoint = <&wcam_out>;

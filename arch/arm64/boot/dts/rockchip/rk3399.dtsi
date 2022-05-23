@@ -865,6 +865,18 @@
 		};
 	};
 
+	ddr_timing: ddr_timing {
+		compatible = "rockchip,ddr-timing";
+		pd_idle = <0>;
+		sr_idle = <0>;
+		sr_mc_gate_idle = <0>;
+		srpd_lite_idle	= <0>;
+		standby_idle = <0>;
+		auto_lp_dis_freq = <666>;
+		phy_dll_dis_freq = <260>;
+	};
+
+
 	tsadc: tsadc@ff260000 {
 		compatible = "rockchip,rk3399-tsadc";
 		reg = <0x0 0xff260000 0x0 0x100>;
@@ -1172,6 +1184,25 @@
 				};
 			};
 		};
+	};
+
+	dfi: dfi@ff630000 {
+		reg = <0x00 0xff630000 0x00 0x4000>;
+		compatible = "rockchip,rk3399-dfi";
+		rockchip,pmu = <&pmugrf>;
+		clocks = <&cru PCLK_DDR_MON>;
+		clock-names = "pclk_ddr_mon";
+		status = "disabled";
+	};
+
+	dmc: dmc {
+		compatible = "rockchip,rk3399-dmc";
+		devfreq-events = <&dfi>;
+		interrupts = <GIC_SPI 1 IRQ_TYPE_LEVEL_HIGH 0>;
+		clocks = <&cru SCLK_DDRC>;
+		clock-names = "dmc_clk";
+		ddr_timing = <&ddr_timing>;
+		status = "disabled";
 	};
 
 	pmugrf: syscon@ff320000 {
@@ -1790,26 +1821,17 @@
 		compatible = "rockchip,rk3399-cif-isp";
 		reg = <0x0 0xff910000 0x0 0x4000>;
 		interrupts = <GIC_SPI 43 IRQ_TYPE_LEVEL_HIGH 0>;
+		interrupt-names = "isp_irq";
 		clocks = <&cru SCLK_ISP0>,
-			 <&cru ACLK_ISP0_WRAPPER>,
-			 <&cru HCLK_ISP0_WRAPPER>;
+			 <&cru ACLK_ISP0>, <&cru HCLK_ISP0>,
+			 <&cru ACLK_ISP0_WRAPPER>, <&cru HCLK_ISP0_WRAPPER>;
 		clock-names = "isp", "aclk", "hclk";
+		power-domains = <&power RK3399_PD_ISP0>;
 		iommus = <&isp0_mmu>;
 		phys = <&mipi_dphy_rx0>;
 		phy-names = "dphy";
-		power-domains = <&power RK3399_PD_ISP0>;
 		status = "disabled";
 
-		ports {
-			#address-cells = <1>;
-			#size-cells = <0>;
-
-			port@0 {
-				reg = <0>;
-				#address-cells = <1>;
-				#size-cells = <0>;
-			};
-		};
 	};
 
 	isp0_mmu: iommu@ff914000 {

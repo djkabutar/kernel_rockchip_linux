@@ -237,7 +237,7 @@ static int rkisp1_subdev_notifier_complete(struct v4l2_async_notifier *notifier)
 	if (ret)
 		return ret;
 
-	printk(KERN_DEBUG "Async subdev notifier completed\n");
+	pr_info("Async subdev notifier completed\n");
 
 	return 0;
 }
@@ -271,7 +271,7 @@ static int rkisp1_subdev_notifier(struct rkisp1_device *rkisp1)
 
 		ret = v4l2_fwnode_endpoint_parse(ep, &vep);
 		if (ret) {
-			printk(KERN_DEBUG "Couldn't parse endpoint %d\n",
+			pr_info("Couldn't parse endpoint %d\n",
 			       next_id);
 				   
 			goto err_parse;
@@ -290,7 +290,7 @@ static int rkisp1_subdev_notifier(struct rkisp1_device *rkisp1)
 		rk_asd->mbus_flags = vep.bus.mipi_csi2.flags;
 		rk_asd->lanes = vep.bus.mipi_csi2.num_data_lanes;
 
-		printk(KERN_DEBUG "registered ep id %d with %d lanes\n",
+		pr_info("registered ep id %d with %d lanes\n",
 			vep.base.id, rk_asd->lanes);
 
 		next_id = vep.base.id + 1;
@@ -305,7 +305,7 @@ err_parse:
 	}
 
 	if (next_id == 0)
-		printk(KERN_DEBUG "no remote subdevice found\n");
+		pr_info("no remote subdevice found\n");
 	ntf->ops = &rkisp1_subdev_notifier_ops;
 	ret = v4l2_async_nf_register(&rkisp1->v4l2_dev, ntf);
 	if (ret) {

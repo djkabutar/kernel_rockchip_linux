@@ -766,7 +766,7 @@ int v4l2_subdev_link_validate_default(struct v4l2_subdev *sd,
 
 	/* The width, height and code must match. */
 	if (source_fmt->format.width != sink_fmt->format.width) {
-		dev_dbg(sd->entity.graph_obj.mdev->dev,
+		pr_info(
 			"%s: width does not match (source %u, sink %u)\n",
 			__func__,
 			source_fmt->format.width, sink_fmt->format.width);
@@ -774,7 +774,7 @@ int v4l2_subdev_link_validate_default(struct v4l2_subdev *sd,
 	}
 
 	if (source_fmt->format.height != sink_fmt->format.height) {
-		dev_dbg(sd->entity.graph_obj.mdev->dev,
+		pr_info(
 			"%s: height does not match (source %u, sink %u)\n",
 			__func__,
 			source_fmt->format.height, sink_fmt->format.height);
@@ -782,7 +782,7 @@ int v4l2_subdev_link_validate_default(struct v4l2_subdev *sd,
 	}
 
 	if (source_fmt->format.code != sink_fmt->format.code) {
-		dev_dbg(sd->entity.graph_obj.mdev->dev,
+		pr_info(
 			"%s: media bus code does not match (source 0x%8.8x, sink 0x%8.8x)\n",
 			__func__,
 			source_fmt->format.code, sink_fmt->format.code);
@@ -795,7 +795,7 @@ int v4l2_subdev_link_validate_default(struct v4l2_subdev *sd,
 	 */
 	if (source_fmt->format.field != sink_fmt->format.field &&
 	    sink_fmt->format.field != V4L2_FIELD_NONE) {
-		dev_dbg(sd->entity.graph_obj.mdev->dev,
+		pr_info(
 			"%s: field does not match (source %u, sink %u)\n",
 			__func__,
 			source_fmt->format.field, sink_fmt->format.field);
@@ -805,7 +805,7 @@ int v4l2_subdev_link_validate_default(struct v4l2_subdev *sd,
 	if (pass)
 		return 0;
 
-	dev_dbg(sd->entity.graph_obj.mdev->dev,
+	pr_info(
 		"%s: link was \"%s\":%u -> \"%s\":%u\n", __func__,
 		link->source->entity->name, link->source->index,
 		link->sink->entity->name, link->sink->index);
@@ -854,8 +854,13 @@ int v4l2_subdev_link_validate(struct media_link *link)
 
 	rval = v4l2_subdev_call(sink, pad, link_validate, link,
 				&source_fmt, &sink_fmt);
-	if (rval != -ENOIOCTLCMD)
+	if (rval != -ENOIOCTLCMD) {
+		pr_info(
+			"%s: link was \"%s\":%u -> \"%s\":%u\n", __func__,
+			link->source->entity->name, link->source->index,
+			link->sink->entity->name, link->sink->index);
 		return rval;
+	}
 
 	return v4l2_subdev_link_validate_default(
 		sink, link, &source_fmt, &sink_fmt);
